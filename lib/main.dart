@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:compass/parcel_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,10 +19,11 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home: Stack(children:[
-          const CameraPage(),
-          CompassDemo()
-      ]),
+      home : const MapSample(),
+      // home: Stack(children:[
+      //     const CameraPage(),
+      //     CompassDemo()
+      // ]),
     );
   }
 }
@@ -60,7 +62,7 @@ class _CompassState extends State<Compass> {
   @override
   void initState() {
     super.initState();
-    //The argument type 'void Function(double)' can't be assigned to the parameter type 'void Function(CompassEvent)?'.
+    // The argument type 'void Function(double)' can't be assigned to the parameter type 'void Function(CompassEvent)?'.
     FlutterCompass.events?.listen(_onData);
   }
   void _onData(CompassEvent x) => setState(() { _heading = x.heading!; });
@@ -88,7 +90,7 @@ class CompassPainter extends CustomPainter {
   final double angle;
   double get rotation => -2 * pi * (angle / 360);
 
-  Paint get _brush => new Paint()
+  Paint get _brush => Paint()
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0;
 
