@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:video_player/video_player.dart';
 
 class CameraPage extends StatefulWidget {
@@ -17,13 +18,18 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   bool _isCameraInitialized = false;
   late final List<CameraDescription> _cameras;
   bool _isRecording = false;
+  double _heading = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     initCamera();
+    // The argument type 'void Function(double)' can't be assigned to the parameter type 'void Function(CompassEvent)?'.
+    FlutterCompass.events?.listen(_onData);
   }
+  void _onData(CompassEvent x) => setState(() { _heading = x.heading!; });
+
 
   Future<void> initCamera() async {
     _cameras = await availableCameras();
@@ -100,12 +106,31 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         navigator.push(
           MaterialPageRoute(
             builder: (context) => PreviewPage(
-              imagePath: xFile.path,
+              imagePath: xFile.path
             ),
           ),
         );
       }
     }
+
+    /*try {
+      // Ensure that the camera is initialized
+      await _initializeControllerFuture;
+
+      // Attempt to take a picture and get the file
+      final image = await _controller.takePicture();
+
+      // If the picture was taken, display it on a new screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DisplayPictureScreen(imagePath: image?.path),
+        ),
+      );
+    } catch (e) {
+      // If an error occurs, log the error to the console
+      print("Error taking picture: $e");
+    }*/
   }
 
   void _onRecordVideoPressed() async {
@@ -132,23 +157,17 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
           body: Column(
             children: [
               CameraPreview(_controller!),
-              const SizedBox(
-                height: 35,
-              ),
+              const SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (!_isRecording)
-                    ElevatedButton(
-                      onPressed: _onTakePhotoPressed,
-                      style: ElevatedButton.styleFrom(
-                          fixedSize: const Size(70, 70),
-                          shape: const CircleBorder(),
-                          backgroundColor: Colors.white),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.black,
-                        size: 30,
+                    Visibility(
+                      visible: !(_heading.toInt()<=100||_heading.toInt()>=150),
+                      child: ElevatedButton(
+                        onPressed: _onTakePhotoPressed,
+                        style: ElevatedButton.styleFrom(
+                            fixedSize: const Size(70, 70), shape: const CircleBorder(), backgroundColor: Colors.white),
+                        child: const Icon(Icons.camera_alt, color: Colors.black, size: 30),
                       ),
                     ),
                   /*if (!_isRecording) const SizedBox(width: 15),
@@ -220,8 +239,7 @@ class PreviewPage extends StatefulWidget {
   final String? imagePath;
   final String? videoPath;
 
-  const PreviewPage({Key? key, this.imagePath, this.videoPath})
-      : super(key: key);
+  const PreviewPage({Key? key, this.imagePath, this.videoPath}) : super(key: key);
 
   @override
   State<PreviewPage> createState() => _PreviewPageState();
@@ -263,13 +281,13 @@ class _PreviewPageState extends State<PreviewPage> {
       body: Center(
         child: widget.imagePath != null
             ? Image.file(
-          File(widget.imagePath ?? ""),
-          fit: BoxFit.cover,
-        )
+                File(widget.imagePath ?? ""),
+                fit: BoxFit.cover,
+              )
             : AspectRatio(
-          aspectRatio: controller!.value.aspectRatio,
-          child: VideoPlayer(controller!),
-        ),
+                aspectRatio: controller!.value.aspectRatio,
+                child: VideoPlayer(controller!),
+              ),
       ),
     );
   }

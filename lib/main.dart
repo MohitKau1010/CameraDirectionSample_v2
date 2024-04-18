@@ -6,6 +6,7 @@ import 'package:flutter_compass/flutter_compass.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'camera_page.dart';
+import 'map_sample.dart';
 
 // void main() => runApp(CompassDemo());
 void main() => runApp(const MyApp());
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home : const MapSample(),
+      home : MapScreen(),//MapSample(),
       // home: Stack(children:[
       //     const CameraPage(),
       //     CompassDemo()

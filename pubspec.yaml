@@ -45,6 +45,8 @@ dependencies:
   location: ^6.0.1
   flutter_polyline_points: ^1.0.0
 
+  http: ^0.13.3
+
 
 dev_dependencies:
   flutter_test:
