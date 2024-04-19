@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:compass/camera_with_compass.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -31,7 +33,7 @@ class _MapScreenState extends State<MapScreen> {
   late GoogleMapController mapController;
   late LocationData currentLocation;
   double compassHeading = 0.0;
-  List<double> _magnetometerValues = [0.0, 0.0, 0.0];
+  double _tilt = 0.0;
   Set<Marker> _markers = {}; // Define a set to hold the markers
   Set<Polygon> _polygons = {};
   double _heading = 0;
@@ -50,10 +52,12 @@ class _MapScreenState extends State<MapScreen> {
     _getCompassHeading();
     FlutterCompass.events?.listen(_onData);
     // Listen to accelerometer events
-    // Listen to magnetometer events
-    magnetometerEvents.listen((MagnetometerEvent event) {
+    accelerometerEvents.listen((event) {
+      // Calculate the tilt angle based on accelerometer data
+      double angle = atan(event.x / sqrt(event.y * event.y + event.z * event.z));
       setState(() {
-        _magnetometerValues = [event.x, event.y, event.z];
+        // Convert radians to degrees
+        _tilt = angle * (180 / pi);
       });
     });
   }
@@ -105,7 +109,7 @@ class _MapScreenState extends State<MapScreen> {
               target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
               zoom: 19.0,
               bearing: _heading, // Reset to north
-              tilt: 90.0
+              tilt: _tilt,
             ),
           ),
         );
