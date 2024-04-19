@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 // void main() {
 //   runApp(MyApp());
@@ -30,16 +31,31 @@ class _MapScreenState extends State<MapScreen> {
   late GoogleMapController mapController;
   late LocationData currentLocation;
   double compassHeading = 0.0;
+  List<double> _magnetometerValues = [0.0, 0.0, 0.0];
   Set<Marker> _markers = {}; // Define a set to hold the markers
+  Set<Polygon> _polygons = {};
   double _heading = 0;
   bool captureImage = false;
 
   @override
+  void didChangeDependencies() {
+    _getLocation();
+    super.didChangeDependencies();
+  }
+
+  @override
   void initState() {
     super.initState();
-    _getLocation();
+
     _getCompassHeading();
     FlutterCompass.events?.listen(_onData);
+    // Listen to accelerometer events
+    // Listen to magnetometer events
+    magnetometerEvents.listen((MagnetometerEvent event) {
+      setState(() {
+        _magnetometerValues = [event.x, event.y, event.z];
+      });
+    });
   }
 
   void _onData(CompassEvent x) {
@@ -55,10 +71,9 @@ class _MapScreenState extends State<MapScreen> {
       _markers.removeWhere((marker) => marker.markerId == 'custom_marker');
     });
 
-
     BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(1,1)),
-      'assets/img/png_arrow.png',
+      const ImageConfiguration(size: Size(1, 1)),
+      'assets/img/dot_dot.png',
     ).then((BitmapDescriptor icon) {
       // Create a marker
       Marker marker = Marker(
@@ -69,7 +84,7 @@ class _MapScreenState extends State<MapScreen> {
         rotation: _heading, // Set rotation angle for the marker icon
       );
 
-      if(_heading != 0.0){
+      if (_heading != 0.0) {
         setState(() {
           _markers.add(marker); // Add the marker to the set
         });
@@ -80,11 +95,20 @@ class _MapScreenState extends State<MapScreen> {
         }*/
       }
 
-
-
       ///
       setState(() {
         _heading = x.heading!;
+        // Reset camera heading to north when FAB is pressed
+        mapController.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
+              zoom: 19.0,
+              bearing: _heading, // Reset to north
+              tilt: 90.0
+            ),
+          ),
+        );
       });
     });
   }
@@ -115,22 +139,49 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Capture between 100-150'),
+        title: const Text('Capture between 100 - 150'),
       ),
       body: Stack(
         children: [
           GoogleMap(
+            mapType: MapType.normal,
             initialCameraPosition: CameraPosition(
-              target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0), // Default center (e.g., San Francisco)
-              zoom: 15.0,
+              target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
+              // Default center (e.g., San Francisco)
+              zoom: 19.0,
             ),
-
+            compassEnabled: false, // Disable default compass
+            myLocationButtonEnabled: false,
+            // myLocationEnabled: true,
+            rotateGesturesEnabled: false, // Disable manual rotation gestures
+            tiltGesturesEnabled: false, // Disable manual tilt gestures
             onMapCreated: (GoogleMapController controller) {
               mapController = controller;
+
+
+              setState(() {
+                _polygons.add(
+                  Polygon(
+                    polygonId: const PolygonId("polygon_1"),
+                    points: const [
+                      LatLng(30.693690, 76.879999), //30.693690, 76.879999
+                      LatLng(30.693704, 76.880370), //30.693704, 76.880370
+                      LatLng(30.692839, 76.880332), //30.692839, 76.880332
+                      LatLng(30.692848, 76.879868), //30.692848, 76.879868
+                    ],
+                    strokeWidth: 2,
+                    strokeColor: Colors.blue,
+                    fillColor: Colors.blue.withOpacity(0.5),
+                  ),
+                );
+              });
+
+
               // _addCustomMarker(LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0), _heading); // Add marker at a specific location with a direction of 45 degrees
             },
-            myLocationEnabled: true,
+            /// myLocationEnabled: true,
             markers: _markers, // Set the markers to be displayed on the map
+            polygons: _polygons,
           ),
           if (currentLocation != null)
             Positioned(
@@ -138,12 +189,20 @@ class _MapScreenState extends State<MapScreen> {
               left: 16.0,
               child: FloatingActionButton(
                 onPressed: () {
-                  mapController.animateCamera(CameraUpdate.newCameraPosition(
+                  /*mapController.animateCamera(CameraUpdate.newCameraPosition(
                     CameraPosition(
-                      target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
-                      zoom: 18.0,
+                        target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0), zoom: 18.0),
+                  ));*/
+                  // Reset camera heading to north when FAB is pressed
+                  mapController.animateCamera(
+                    CameraUpdate.newCameraPosition(
+                      CameraPosition(
+                        target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
+                        zoom: 15.0,
+                        bearing: _heading, // Reset to north
+                      ),
                     ),
-                  ));
+                  );
                 },
                 child: const Icon(Icons.location_searching),
               ),
@@ -160,27 +219,26 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
-
-            Positioned(
-              bottom: 16.0,
-              left: 180.0,
-              child: FloatingActionButton(
-                onPressed: () {
-                  // mapController.animateCamera(CameraUpdate.newCameraPosition(
-                  //   CameraPosition(
-                  //     target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
-                  //     zoom: 18.0,
-                  //   ),
-                  // ));
-                  // Navigate to the second screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CameraWithCompass()),
-                  );
-                },
-                child: const Icon(Icons.camera_alt),
-              ),
+          Positioned(
+            bottom: 16.0,
+            left: 180.0,
+            child: FloatingActionButton(
+              onPressed: () {
+                // mapController.animateCamera(CameraUpdate.newCameraPosition(
+                //   CameraPosition(
+                //     target: LatLng(currentLocation.latitude ?? 0.0, currentLocation.longitude ?? 0.0),
+                //     zoom: 18.0,
+                //   ),
+                // ));
+                // Navigate to the second screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CameraWithCompass()),
+                );
+              },
+              child: const Icon(Icons.camera_alt),
             ),
+          ),
         ],
       ),
     );

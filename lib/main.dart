@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home : MapScreen(),//MapSample(),
+      home : MapScreen(),// MapSample(),
       // home: Stack(children:[
       //     const CameraPage(),
       //     CompassDemo()
@@ -46,7 +46,7 @@ class CompassDemo extends StatelessWidget {
 
 class Compass extends StatefulWidget {
 
-  //Compass({Key key}) : super(key: key);
+  // Compass({Key key}) : super(key: key);
 
   @override
   _CompassState createState() => _CompassState();
