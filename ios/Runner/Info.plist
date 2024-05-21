@@ -6,6 +6,10 @@
 	<string>NSLocationWhenInUseUsageDescription</string>
 	<key>to display and track location</key>
 	<string>NSLocationAlwaysUsageDescription</string>
+
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Need to save screenshot to your photo library</string>
+
 	<key>to display and track location</key>
 	<string>NSLocationAlwaysAndWhenInUseUsageDescription</string>
 	<key>UIBackgroundModes</key>

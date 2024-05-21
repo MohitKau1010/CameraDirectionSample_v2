@@ -43,10 +43,16 @@ dependencies:
 
   google_maps_flutter: ^2.5.1
   location: ^6.0.1
+#  trust_location: ^2.0.13
   flutter_polyline_points: ^1.0.0
-
+  point_in_polygon: ^1.0.0
   http: ^0.13.3
 
+  image: ^3.0.1
+  path_provider: ^2.0.2
+#  screenshot: ^1.2.0
+  screenshot: ^2.3.0
+  cross_file_image: ^1.1.0
 
 dev_dependencies:
   flutter_test:

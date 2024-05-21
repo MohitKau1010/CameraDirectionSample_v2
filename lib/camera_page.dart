@@ -1,10 +1,15 @@
 import 'dart:io';
-
+import 'dart:math';
+import 'dart:typed_data';
+import 'circular_map.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_compass/flutter_compass.dart';
+import 'package:image/image.dart' as img;
+import 'package:screenshot/screenshot.dart';
+import 'image_watermark/show_watermark.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -13,23 +18,34 @@ class CameraPage extends StatefulWidget {
   CameraPageState createState() => CameraPageState();
 }
 
-class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
+class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   CameraController? _controller;
+  late TabController _tabController;
+
+  // for
   bool _isCameraInitialized = false;
   late final List<CameraDescription> _cameras;
   bool _isRecording = false;
+
+  // for getting head direction.
   double _heading = 0;
+
+  //Create an instance of ScreenshotController
+  ScreenshotController screenshotController = ScreenshotController();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     WidgetsBinding.instance.addObserver(this);
     initCamera();
     // The argument type 'void Function(double)' can't be assigned to the parameter type 'void Function(CompassEvent)?'.
     FlutterCompass.events?.listen(_onData);
   }
-  void _onData(CompassEvent x) => setState(() { _heading = x.heading!; });
 
+  void _onData(CompassEvent x) => setState(() {
+        _heading = x.heading!;
+      });
 
   Future<void> initCamera() async {
     _cameras = await availableCameras();
@@ -59,6 +75,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _controller?.dispose();
+    _tabController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -74,7 +91,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       XFile file = await cameraController.takePicture();
       return file;
     } on CameraException catch (e) {
-      debugPrint('Error occured while taking picture: $e');
+      debugPrint('Error occurred while taking picture: $e');
       return null;
     }
   }
@@ -93,99 +110,144 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       });
       return video;
     } on CameraException catch (e) {
-      debugPrint('Error occured while taking picture: $e');
+      debugPrint('Error occurred while taking picture: $e');
       return null;
     }
   }
 
-  void _onTakePhotoPressed() async {
-    final navigator = Navigator.of(context);
+  void onTakePhotoPressed() async {
+    print("<<<< PRESSED >>>");
+    // final navigator = Navigator.of(context);
     final xFile = await capturePhoto();
     if (xFile != null) {
       if (xFile.path.isNotEmpty) {
-        navigator.push(
-          MaterialPageRoute(
-            builder: (context) => PreviewPage(
-              imagePath: xFile.path
-            ),
-          ),
-        );
-      }
-    }
+        //
+        /// Add watermark text...
+        // get the image file
+        // File assetFile = await getFileFromAsset();
 
-    /*try {
-      // Ensure that the camera is initialized
-      await _initializeControllerFuture;
+        // decode image and return new image
+        img.Image? originalImage = img.decodeImage(File(xFile.path).readAsBytesSync());
 
-      // Attempt to take a picture and get the file
-      final image = await _controller.takePicture();
+        // watermark text
+        String waterMarkText = "LatLng(30.6924784,76.8775464)";
+        // add watermark to image and specify the position
+        img.drawString(originalImage!, img.arial_14, 5, (originalImage.height - 100), waterMarkText, color: 0xffFF0000);
 
-      // If the picture was taken, display it on a new screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DisplayPictureScreen(imagePath: image?.path),
-        ),
-      );
-    } catch (e) {
-      // If an error occurs, log the error to the console
-      print("Error taking picture: $e");
-    }*/
-  }
+        // watermark text
+        String waterMarkText2 = "Captured Angle (10 degree)";
+        // add watermark to image and specify the position
+        img.drawString(originalImage!, img.arial_14, 205, (originalImage.height - 100), waterMarkText2,
+            color: 0xffFF0000);
 
-  void _onRecordVideoPressed() async {
-    final navigator = Navigator.of(context);
-    final xFile = await captureVideo();
-    if (xFile != null) {
-      if (xFile.path.isNotEmpty) {
-        navigator.push(
-          MaterialPageRoute(
-            builder: (context) => PreviewPage(
-              videoPath: xFile.path,
-            ),
-          ),
-        );
+        // create temporary directory on storage
+        var tempDir = await getTemporaryDirectory();
+
+        // generate random name
+        Random _random = Random();
+        String randomFileName = _random.nextInt(10000).toString();
+
+        // store new image on filename
+        File('${tempDir.path}/$randomFileName.png').writeAsBytesSync(img.encodePng(originalImage));
+
+        // set watermarked image from image path
+        File watermarkedImage = File('${tempDir.path}/$randomFileName.png');
+
+        Uint8List? mapImage;
+
+        await screenshotController.capture(delay: const Duration(milliseconds: 10)).then((capturedImage) async {
+          mapImage = capturedImage;
+          // ShowCapturedWidget(context, capturedImage!);
+          print(" << SCREENSHOT CAPTURED >> ");
+        }).catchError((onError) {
+          print(onError);
+        });
+
+        // Navigate to Screen 2
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ImageScreen(watermarkedImage, mapImage!)));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
     if (_isCameraInitialized) {
       return SafeArea(
         child: Scaffold(
-          body: Column(
-            children: [
-              CameraPreview(_controller!),
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                    Visibility(
-                      visible: !(_heading.toInt()<=100||_heading.toInt()>=150),
+          body: Row(children: [
+            SizedBox(
+                width: MediaQuery.of(context).size.width * 0.75,
+                child: /*Container(color: Colors.black)*/ CameraPreview(_controller!)),
+            const SizedBox(width: 5),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // const SizedBox(width: 15),
+                Screenshot(
+                  controller: screenshotController,
+                  child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.6,
+                      width: MediaQuery.of(context).size.width * 0.20,
+                      child: const CircularMap())
+                ),
+                const SizedBox(height: 8),
+                // Container(
+                //     height: 100,
+                //     width: 100,
+                //     child: TabBar(controller: _tabController, tabs: const [
+                //       Tab(text: 'Camera'),
+                //       Tab(text: 'Video'),
+                //     ])),
+                // const SizedBox(height: 2),
+                // TabBarView(
+                //   controller: _tabController,
+                //   children: const [
+                //     Center(child: Text('Tab 1 Content')),
+                //     Center(child: Text('Tab 2 Content'))
+                //   ]
+                // ),
+
+                // give the tab bar a height [can change height to preferred height]
+               /* Container(
+                    height: 15,
+                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(25.0)),
+                    child: TabBar(
+                        controller: _tabController,
+                        // give the indicator a decoration (color and border radius)
+                        indicator: BoxDecoration(borderRadius: BorderRadius.circular(25.0), color: Colors.green),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.black,
+                        tabs: const [
+                          // first tab [you can add an icon using the icon property]
+                          Tab(text: 'A'),
+                          // second tab [you can add an icon using the icon property]
+                          Tab(text: 'B')
+                        ])),*/
+
+                // Camera Button
+                Visibility(
+                    visible: true, //!(_heading.toInt() <= 100 || _heading.toInt() >= 150),
+                    replacement: SizedBox(height: MediaQuery.of(context).size.height * 0.25, width: 70),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.18,
                       child: ElevatedButton(
-                        onPressed: _onTakePhotoPressed,
-                        style: ElevatedButton.styleFrom(
-                            fixedSize: const Size(70, 70), shape: const CircleBorder(), backgroundColor: Colors.white),
-                        child: const Icon(Icons.camera_alt, color: Colors.black, size: 30),
-                      ),
-                    ),
-                  /*if (!_isRecording) const SizedBox(width: 15),
-                  ElevatedButton(
-                    onPressed:_isRecording? null: _onRecordVideoPressed,
-                    style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(70, 70),
-                        shape: const CircleBorder(),
-                        backgroundColor: Colors.white),
-                    child: Icon(
-                      _isRecording ? Icons.stop : Icons.videocam,
-                      color: Colors.red,
-                    ),
-                  ),*/
-                ],
-              ),
-            ],
-          ),
+                          onPressed: onTakePhotoPressed,
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              fixedSize: const Size(70, 70),
+                              shape: const CircleBorder(),
+                              backgroundColor: Colors.white),
+                          child: const Icon(Icons.camera_alt, color: Colors.black, size: 30)),
+                    )),
+              ],
+            )
+          ]),
         ),
       );
     } else {
@@ -199,11 +261,8 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     final previousCameraController = _controller;
 
     // Instantiating the camera controller
-    final CameraController cameraController = CameraController(
-      description,
-      ResolutionPreset.high,
-      imageFormatGroup: ImageFormatGroup.jpeg,
-    );
+    final CameraController cameraController =
+        CameraController(description, ResolutionPreset.high, imageFormatGroup: ImageFormatGroup.jpeg);
 
     // Initialize controller
     try {
