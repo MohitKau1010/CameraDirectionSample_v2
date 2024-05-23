@@ -2,18 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>to display and track location</key>
-	<string>NSLocationWhenInUseUsageDescription</string>
-	<key>to display and track location</key>
-	<string>NSLocationAlwaysUsageDescription</string>
-
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>Need to save screenshot to your photo library</string>
-
-	<key>to display and track location</key>
-	<string>NSLocationAlwaysAndWhenInUseUsageDescription</string>
-	<key>UIBackgroundModes</key>
-	<string>location</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>task-identifier</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -36,6 +30,26 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string></string>
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string></string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string></string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Need Location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Need Location</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string></string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Need to save screenshot to your photo library</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -53,9 +67,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 </dict>
 </plist>

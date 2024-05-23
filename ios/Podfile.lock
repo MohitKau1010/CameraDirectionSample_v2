@@ -7,15 +7,18 @@ PODS:
   - google_maps_flutter_ios (0.0.1):
     - Flutter
     - GoogleMaps (< 9.0)
-  - GoogleMaps (5.2.0):
-    - GoogleMaps/Maps (= 5.2.0)
-  - GoogleMaps/Base (5.2.0)
-  - GoogleMaps/Maps (5.2.0):
+  - GoogleMaps (7.4.0):
+    - GoogleMaps/Maps (= 7.4.0)
+  - GoogleMaps/Base (7.4.0)
+  - GoogleMaps/Maps (7.4.0):
     - GoogleMaps/Base
   - image_picker_ios (0.0.1):
     - Flutter
   - location (0.0.1):
     - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - sensors_plus (0.0.1):
     - Flutter
   - video_player_avfoundation (0.0.1):
@@ -29,6 +32,7 @@ DEPENDENCIES:
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - location (from `.symlinks/plugins/location/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - sensors_plus (from `.symlinks/plugins/sensors_plus/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
 
@@ -49,6 +53,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   location:
     :path: ".symlinks/plugins/location/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
   sensors_plus:
     :path: ".symlinks/plugins/sensors_plus/ios"
   video_player_avfoundation:
@@ -59,12 +65,13 @@ SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   flutter_compass: cbbd285cea1584c7ac9c4e0c3e1f17cbea55e855
   google_maps_flutter_ios: d1318b4ff711612cab16862d7a87e31a7403d458
-  GoogleMaps: 025272d5876d3b32604e5c080dc25eaf68764693
+  GoogleMaps: 032f676450ba0779bd8ce16840690915f84e57ac
   image_picker_ios: 99dfe1854b4fa34d0364e74a78448a0151025425
   location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
+  path_provider_foundation: 3784922295ac71e43754bd15e0653ccfd36a147c
   sensors_plus: 42b9de1b8237675fa8d8121e4bb93be0f79fa61d
   video_player_avfoundation: 02011213dab73ae3687df27ce441fbbcc82b5579
 
-PODFILE CHECKSUM: 70d9d25280d0dd177a5f637cdb0f0b0b12c6a189
+PODFILE CHECKSUM: 4cfce3d7fb7fec3b381a90998fb4fb0d17562a09
 
 COCOAPODS: 1.14.3

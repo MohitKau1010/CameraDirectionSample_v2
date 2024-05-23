@@ -27,10 +27,11 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
   late final List<CameraDescription> _cameras;
   bool _isRecording = false;
 
-  // for getting head direction.
+  // For getting head direction.
   double _heading = 0;
+  int _activeTabIndex = 0;
 
-  //Create an instance of ScreenshotController
+  // Create an instance of ScreenshotController
   ScreenshotController screenshotController = ScreenshotController();
 
   @override
@@ -48,9 +49,16 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
       });
 
   Future<void> initCamera() async {
+    // within your initState() method
+    _tabController.addListener(_setActiveTabIndex);
+
+
     _cameras = await availableCameras();
     // Initialize the camera with the first camera in the list
     await onNewCameraSelected(_cameras.first);
+  }
+  void _setActiveTabIndex() {
+    _activeTabIndex = _tabController.index;
   }
 
   @override
@@ -137,7 +145,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         // watermark text
         String waterMarkText2 = "Captured Angle (10 degree)";
         // add watermark to image and specify the position
-        img.drawString(originalImage!, img.arial_14, 205, (originalImage.height - 100), waterMarkText2,
+        img.drawString(originalImage, img.arial_14, 205, (originalImage.height - 100), waterMarkText2,
             color: 0xffFF0000);
 
         // create temporary directory on storage
@@ -163,7 +171,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
           print(onError);
         });
 
-        // Navigate to Screen 2
+        // Navigate to Screen 2..
         Navigator.push(context, MaterialPageRoute(builder: (context) => ImageScreen(watermarkedImage, mapImage!)));
       }
     }
@@ -179,81 +187,79 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
     // than having to individually change instances of widgets.
     if (_isCameraInitialized) {
       return SafeArea(
-        child: Scaffold(
-          body: Row(children: [
-            SizedBox(
-                width: MediaQuery.of(context).size.width * 0.75,
-                child: /*Container(color: Colors.black)*/ CameraPreview(_controller!)),
-            const SizedBox(width: 5),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // const SizedBox(width: 15),
-                Screenshot(
-                  controller: screenshotController,
-                  child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.6,
-                      width: MediaQuery.of(context).size.width * 0.20,
-                      child: const CircularMap())
-                ),
-                const SizedBox(height: 8),
-                // Container(
-                //     height: 100,
-                //     width: 100,
-                //     child: TabBar(controller: _tabController, tabs: const [
-                //       Tab(text: 'Camera'),
-                //       Tab(text: 'Video'),
-                //     ])),
-                // const SizedBox(height: 2),
-                // TabBarView(
-                //   controller: _tabController,
-                //   children: const [
-                //     Center(child: Text('Tab 1 Content')),
-                //     Center(child: Text('Tab 2 Content'))
-                //   ]
-                // ),
+          child: Scaffold(
+              body: Row(children: [
+        SizedBox(
+            width: MediaQuery.of(context).size.width * 0.75,
+            child: /*Container(color: Colors.black)*/ CameraPreview(_controller!)),
+        const SizedBox(width: 5),
+        Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          // const SizedBox(width: 15),
+          Screenshot(
+              controller: screenshotController,
+              child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  width: MediaQuery.of(context).size.width * 0.20,
+                  child: const CircularMap())),
+          const SizedBox(height: 2),
 
-                // give the tab bar a height [can change height to preferred height]
-               /* Container(
-                    height: 15,
-                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(25.0)),
-                    child: TabBar(
-                        controller: _tabController,
-                        // give the indicator a decoration (color and border radius)
-                        indicator: BoxDecoration(borderRadius: BorderRadius.circular(25.0), color: Colors.green),
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.black,
-                        tabs: const [
-                          // first tab [you can add an icon using the icon property]
-                          Tab(text: 'A'),
-                          // second tab [you can add an icon using the icon property]
-                          Tab(text: 'B')
-                        ])),*/
+          // give the tab bar a height [can change height to preferred height]
+          Container(
+              height: MediaQuery.of(context).size.height * 0.09,
+              width: MediaQuery.of(context).size.width * 0.20,
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(15.0)),
+              child: TabBar(
+                  controller: _tabController,
+                  dividerColor: Colors.transparent,
+                  // give the indicator a decoration (color and border radius)
+                  indicator: BoxDecoration(borderRadius: BorderRadius.circular(15.0), color: Colors.green),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.black,
+                  padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 2.0, bottom: 2.0),
+                  tabs: const [
+                    // First tab [you can add an icon using the icon property]
+                    Tab(text: '    Image    '),
+                    // Second tab [you can add an icon using the icon property]
+                    Tab(text: '    Video    ')
+                  ])),
 
-                // Camera Button
-                Visibility(
-                    visible: true, //!(_heading.toInt() <= 100 || _heading.toInt() >= 150),
-                    replacement: SizedBox(height: MediaQuery.of(context).size.height * 0.25, width: 70),
-                    child: SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.18,
-                      child: ElevatedButton(
-                          onPressed: onTakePhotoPressed,
-                          style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              fixedSize: const Size(70, 70),
-                              shape: const CircleBorder(),
-                              backgroundColor: Colors.white),
-                          child: const Icon(Icons.camera_alt, color: Colors.black, size: 30)),
-                    )),
-              ],
-            )
-          ]),
-        ),
-      );
+          // Camera Button
+          Visibility(
+              visible: _activeTabIndex==0, // !(_heading.toInt() <= 100 || _heading.toInt() >= 150),
+              replacement: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.2,
+                child: ElevatedButton(
+                    onPressed: onTakePhotoPressed,
+                    style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        fixedSize: const Size(70, 70),
+                        shape: const CircleBorder(),
+                        backgroundColor: Colors.white),
+                    child: const Icon(Icons.video_camera_back_outlined, color: Colors.black, size: 30)),
+              ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.2,
+                child: ElevatedButton(
+                    onPressed: onTakePhotoPressed,
+                    style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        fixedSize: const Size(70, 70),
+                        shape: const CircleBorder(),
+                        backgroundColor: Colors.white),
+                    child: const Icon(Icons.camera_alt, color: Colors.black, size: 30)),
+              )),
+
+          // Container(
+          //     height: MediaQuery.of(context).size.height * 0.1,
+          //     width: MediaQuery.of(context).size.width * 0.20,
+          //     color: Colors.orange,
+          //     child: const TabBarView(children: [Text("Image"), Text("video")]))
+
+
+        ])
+      ])));
     } else {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
   }
 
