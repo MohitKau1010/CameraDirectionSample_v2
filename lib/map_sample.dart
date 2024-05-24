@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:math';
-import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:compass/camera_with_compass.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:location/location.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:point_in_polygon/point_in_polygon.dart';
 
@@ -31,13 +32,14 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  late GoogleMapController mapController;
+  late GoogleMapController? mapController;
   late LocationData? _currentLocation = null;
   double compassHeading = 0.0;
   double _tilt = 0.0;
   final Set<Marker> _markers = {}; // Define a set to hold the markers..
   final Set<Polygon> _polygons = {};
   double _heading = 0;
+  bool isStopped = false;
   bool captureImage = false;
 
   @override
@@ -48,6 +50,14 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (isStopped) {
+        timer.cancel();
+      }
+      print("Done 5 sec por por kisu hy ni :/");
+    });
+
+
     getLocation();
     _getCompassHeading();
     FlutterCompass.events?.listen(_onData);
@@ -75,6 +85,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onData(CompassEvent x) {
+    setState(() {
+
+    });
+
     setState(() {
       _markers.removeWhere((marker) => marker.markerId == 'custom_marker');
     });
@@ -115,16 +129,21 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _heading = x.heading!;
         // Reset camera heading to north when FAB is pressed
-        mapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
-              zoom: 19.0,
-              bearing: _heading, // Reset to north
-              tilt: _tilt,
+        if(mapController!=null){
+          mapController!.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
+                zoom: 19.0,
+                bearing: _heading, // Reset to north
+                tilt: _tilt,
+              ),
             ),
-          ),
-        );
+          );
+        }else{
+
+        }
+
       });
     });
   }
@@ -179,8 +198,11 @@ class _MapScreenState extends State<MapScreen> {
     location.onLocationChanged.listen((LocationData currentLocation) {
       setState(() {
         _currentLocation = currentLocation;
+        isStopped = false;
       });
     });
+
+    setState(() {});
 
     try {
       _currentLocation = await location.getLocation();
@@ -205,6 +227,8 @@ class _MapScreenState extends State<MapScreen> {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp], );
+
     return Scaffold(
       // appBar: AppBar(
       //   title: const Text('Capture between 100 - 150'),
@@ -230,7 +254,10 @@ class _MapScreenState extends State<MapScreen> {
               tiltGesturesEnabled: false,
               // Disable manual tilt gestures
               onMapCreated: (GoogleMapController controller) {
-                mapController = controller;
+                setState(() {
+                  mapController = controller;
+                });
+
 
                 setState(() {
                   _polygons.add(
@@ -263,6 +290,7 @@ class _MapScreenState extends State<MapScreen> {
               bottom: 16.0,
               left: 16.0,
               child: FloatingActionButton(
+                heroTag: null,
                 onPressed: () {
                   /*mapController.animateCamera(CameraUpdate.newCameraPosition(
                     CameraPosition(
@@ -270,7 +298,7 @@ class _MapScreenState extends State<MapScreen> {
                   ));*/
 
                   // Reset camera heading to north when FAB is pressed
-                  mapController.animateCamera(
+                  mapController!.animateCamera(
                     CameraUpdate.newCameraPosition(
                       CameraPosition(
                         target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
@@ -290,6 +318,7 @@ class _MapScreenState extends State<MapScreen> {
               child: Transform.rotate(
                 angle: compassHeading * (3.1415927 / 180),
                 child: FloatingActionButton(
+                  heroTag: "btn1",
                   onPressed: () {},
                   child: const Icon(Icons.navigation),
                 ),
@@ -299,6 +328,7 @@ class _MapScreenState extends State<MapScreen> {
             bottom: 16.0,
             left: 180.0,
             child: FloatingActionButton(
+              heroTag: "btn2",
               onPressed: () {
                 // mapController.animateCamera(CameraUpdate.newCameraPosition(
                 //   CameraPosition(

@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:compass/video_player_screen.dart';
+
 import 'circular_map.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -52,13 +54,16 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
     // within your initState() method
     _tabController.addListener(_setActiveTabIndex);
 
-
     _cameras = await availableCameras();
     // Initialize the camera with the first camera in the list
     await onNewCameraSelected(_cameras.first);
   }
+
   void _setActiveTabIndex() {
-    _activeTabIndex = _tabController.index;
+    setState(() {
+      _activeTabIndex = _tabController.index;
+    });
+
   }
 
   @override
@@ -95,7 +100,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
       return null;
     }
     try {
-      await cameraController.setFlashMode(FlashMode.off);
+      // await cameraController.setFlashMode(FlashMode.off);
       XFile file = await cameraController.takePicture();
       return file;
     } on CameraException catch (e) {
@@ -190,7 +195,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
           child: Scaffold(
               body: Row(children: [
         SizedBox(
-            width: MediaQuery.of(context).size.width * 0.75,
+            width: MediaQuery.of(context).size.width * 0.7,
             child: /*Container(color: Colors.black)*/ CameraPreview(_controller!)),
         const SizedBox(width: 5),
         Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -198,7 +203,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
           Screenshot(
               controller: screenshotController,
               child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
+                  height: MediaQuery.of(context).size.height * 0.46,
                   width: MediaQuery.of(context).size.width * 0.20,
                   child: const CircularMap())),
           const SizedBox(height: 2),
@@ -225,20 +230,27 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
 
           // Camera Button
           Visibility(
-              visible: _activeTabIndex==0, // !(_heading.toInt() <= 100 || _heading.toInt() >= 150),
+              visible: _activeTabIndex == 0, // !(_heading.toInt() <= 100 || _heading.toInt() >= 150),
               replacement: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.2,
+                height: MediaQuery.of(context).size.height * 0.18,
                 child: ElevatedButton(
-                    onPressed: onTakePhotoPressed,
+                    onPressed: () async {
+                      XFile? file = await captureVideo();
+
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (context) => VideoPlayerScreen(videoFile: file!)));
+
+                    },
                     style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
                         fixedSize: const Size(70, 70),
                         shape: const CircleBorder(),
                         backgroundColor: Colors.white),
-                    child: const Icon(Icons.video_camera_back_outlined, color: Colors.black, size: 30)),
+                    child: Icon(Icons.video_camera_back_outlined,
+                        color: (_isRecording == true) ? Colors.red : Colors.black, size: 30)),
               ),
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.2,
+                height: MediaQuery.of(context).size.height * 0.18,
                 child: ElevatedButton(
                     onPressed: onTakePhotoPressed,
                     style: ElevatedButton.styleFrom(
@@ -254,8 +266,6 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
           //     width: MediaQuery.of(context).size.width * 0.20,
           //     color: Colors.orange,
           //     child: const TabBarView(children: [Text("Image"), Text("video")]))
-
-
         ])
       ])));
     } else {

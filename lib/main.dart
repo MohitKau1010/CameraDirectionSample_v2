@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.dark,
       theme: ThemeData.dark(),
       debugShowCheckedModeBanner: false,
-      home :  MapScreen(),  // CameraScreen()  // const MapSample(),  //const CameraWithCompass(),//
+      home :  MapScreen(),  // CameraScreen()  // const MapSample(),  // const CameraWithCompass(),
       // home: Stack(children:[
       //     const CameraPage(),
       //     CompassDemo()
@@ -114,9 +114,9 @@ class CompassPainter extends CustomPainter {
     Paint needle = _brush
       ..color = Colors.red[400]!;
 
-    double radius = min(size.height / 2.2, size.height / 2.2);
-    Offset center = Offset(size.height / 2.2, size.width / 2.4);
-    Offset? start = Offset.lerp(Offset(center.dx, radius), center, 9);
+    double radius = min(size.height / 3.0, size.height / 3.0);
+    Offset center = Offset(size.height / 3.3, size.width / 2.5);
+    Offset? start = Offset.lerp(Offset(center.dx, radius), center, 2);
     Offset? end = Offset.lerp(Offset(center.dx, radius), center, 1.0);
 
     canvas.translate(center.dx, center.dy);

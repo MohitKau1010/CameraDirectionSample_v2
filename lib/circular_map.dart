@@ -132,6 +132,7 @@ class _CircularMapState extends State<CircularMap> {
       setState(() {
         currentLocation = userLocation;
       });
+      setState(() {});
     } catch (e) {
       print("Failed to get location: $e");
     }

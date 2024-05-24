@@ -38,38 +38,50 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
-    // Lock the orientation to portrait mode
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // // Lock the orientation to portrait mode
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.landscapeLeft,
+    //   DeviceOrientation.landscapeRight,
+    // ]);
     return MaterialApp(
         // title: 'Flutter Camera App',
         themeMode: ThemeMode.dark,
         theme: ThemeData.dark(),
         debugShowCheckedModeBanner: false,
         // home : MapScreen(),//MapSample(),
-        home: Stack(children: [
-          Container(
-            height: MediaQuery.of(context).size.height*0.99,
-            width: MediaQuery.of(context).size.width,
-            margin: const EdgeInsets.only(top: 5.0),
-            decoration: BoxDecoration(
-                border: Border.all(
-                    color: (!(_heading.toInt() <= 100 || _heading.toInt() >= 150)) ? Colors.green : Colors.red,
-                    width: 15.0)),
-            child: const CameraPage(),
-          ),
-          Container(
-            height: MediaQuery.of(context).size.height*0.93,
-            width: MediaQuery.of(context).size.width*0.5,
-            alignment: Alignment.center,
-            margin: const EdgeInsets.all(20.0),
-            color: Colors.transparent,
-            child: Center(
-              child: Compass(),
+        home: Scaffold(
+          body: Stack(children: [
+            Container(
+              height: MediaQuery.of(context).size.height*0.99,
+              width: MediaQuery.of(context).size.width,
+              margin: const EdgeInsets.only(top: 5.0),
+              decoration: BoxDecoration(
+                  border: Border.all(
+                      color: (!(_heading.toInt() <= 100 || _heading.toInt() >= 150)) ? Colors.green : Colors.red,
+                      width: 15.0)),
+              child: const CameraPage(),
             ),
-          ),
-        ]));
+            Container(
+              height: MediaQuery.of(context).size.height*0.93,
+              width: MediaQuery.of(context).size.width*0.5,
+              alignment: Alignment.center,
+              margin: const EdgeInsets.all(20.0),
+              color: Colors.transparent,
+              child: Center(
+                child: Compass(),
+              ),
+            ),
+            InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                height: 40,
+                  width: 100,
+                  color: Colors.black,
+                  alignment: Alignment.center,
+                  child:  const Text("< Back")
+              ),
+            ),
+          ]),
+        ));
   }
 }

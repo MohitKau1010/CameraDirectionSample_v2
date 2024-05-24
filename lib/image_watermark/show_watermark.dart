@@ -15,9 +15,7 @@ class ImageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        // appBar: AppBar(
-        //   title: const Text('Image from File Path'),
-        // ),
+        appBar: AppBar(title: const Text('View Image')),
         body: Row(children: [
       SizedBox(
           height: MediaQuery.of(context).size.height * 0.85,
