@@ -32,7 +32,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  late GoogleMapController? mapController;
+  late GoogleMapController? mapController = null;
   late LocationData? _currentLocation = null;
   double compassHeading = 0.0;
   double _tilt = 0.0;
@@ -50,13 +50,6 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (isStopped) {
-        timer.cancel();
-      }
-      print("Done 5 sec por por kisu hy ni :/");
-    });
-
 
     getLocation();
     _getCompassHeading();
@@ -85,9 +78,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onData(CompassEvent x) {
-    setState(() {
-
-    });
+    setState(() {});
 
     setState(() {
       _markers.removeWhere((marker) => marker.markerId == 'custom_marker');
@@ -129,21 +120,13 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _heading = x.heading!;
         // Reset camera heading to north when FAB is pressed
-        if(mapController!=null){
-          mapController!.animateCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
-                zoom: 19.0,
-                bearing: _heading, // Reset to north
-                tilt: _tilt,
-              ),
-            ),
-          );
-        }else{
-
-        }
-
+        if (mapController != null) {
+          mapController!.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+              target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
+              zoom: 19.0,
+              bearing: _heading, // Reset to north
+              tilt: _tilt)));
+        } else {}
       });
     });
   }
@@ -223,10 +206,10 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     // Lock the orientation to portrait mode
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.landscapeLeft,
+    //   DeviceOrientation.landscapeRight,
+    // ]);
     // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp], );
 
     return Scaffold(
@@ -258,7 +241,6 @@ class _MapScreenState extends State<MapScreen> {
                   mapController = controller;
                 });
 
-
                 setState(() {
                   _polygons.add(
                     Polygon(
@@ -286,6 +268,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           if (_currentLocation != null)
+            /// LOCATION BUTTON
             Positioned(
               bottom: 16.0,
               left: 16.0,
@@ -311,7 +294,9 @@ class _MapScreenState extends State<MapScreen> {
                 child: const Icon(Icons.location_searching),
               ),
             ),
-          if (_currentLocation != null && isPointInPolygon == false)
+
+          if (_currentLocation != null /*&& isPointInPolygon == false*/)
+          /// LOCATION BUTTON
             Positioned(
               bottom: 16.0,
               right: 16.0,
@@ -324,6 +309,8 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
+
+          /// CAMERA BUTTON
           Positioned(
             bottom: 16.0,
             left: 180.0,
@@ -339,7 +326,7 @@ class _MapScreenState extends State<MapScreen> {
                 // Navigate to the second screen
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CameraWithCompass()),
+                  MaterialPageRoute(builder: (context) => CameraWithCompass()),
                 );
               },
               child: const Icon(Icons.camera_alt),

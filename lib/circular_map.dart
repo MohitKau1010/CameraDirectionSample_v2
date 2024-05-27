@@ -17,7 +17,7 @@ class CircularMap extends StatefulWidget {
 
 class _CircularMapState extends State<CircularMap> {
 
-  late GoogleMapController mapController;
+  GoogleMapController? mapController;
   late LocationData? currentLocation = null;
   double compassHeading = 0.0;
   double _tilt = 0.0;
@@ -87,23 +87,25 @@ class _CircularMapState extends State<CircularMap> {
         }*/
       }
 
-      ///
       setState(() {
         _heading = x.heading!;
         // Reset camera heading to north when FAB is pressed
-        mapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
-              zoom: 17.5,
-              bearing: _heading, // Reset to north
-              tilt: _tilt,
+        if(mapController!=null){
+          mapController!.animateCamera(
+            CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
+                zoom: 17.5,
+                bearing: (MediaQuery.of(context).orientation==Orientation.portrait) ? 0.0 : _heading, // Reset to north
+                tilt: (MediaQuery.of(context).orientation==Orientation.portrait) ? 0.0 : _tilt,
+              ),
             ),
-          ),
-        );
-      });
+          );
+        }
 
+      });
     });
+
   }
   // Function to get the current device location
   _getLocation() async {
@@ -169,6 +171,8 @@ class _CircularMapState extends State<CircularMap> {
           tiltGesturesEnabled: false, // Disable manual tilt gestures
           onMapCreated: (GoogleMapController controller) {
             mapController = controller;
+            setState(() {});
+
             setState(() {
               _polygons.add(
                 Polygon(

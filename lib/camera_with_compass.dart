@@ -8,9 +8,11 @@ import 'package:compass/image_watermark/show_watermark.dart';
 import 'package:cross_file_image/cross_file_image.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
 import 'camera_page.dart';
+import 'compass_sample.dart';
 import 'main.dart';
 
 class CameraWithCompass extends StatefulWidget {
@@ -38,6 +40,7 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+    var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     // // Lock the orientation to portrait mode
     // SystemChrome.setPreferredOrientations([
     //   DeviceOrientation.landscapeLeft,
@@ -48,38 +51,34 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
         themeMode: ThemeMode.dark,
         theme: ThemeData.dark(),
         debugShowCheckedModeBanner: false,
-        // home : MapScreen(),//MapSample(),
+        // home : MapScreen(), // MapSample(),
         home: Scaffold(
           body: Stack(children: [
             Container(
-              height: MediaQuery.of(context).size.height*0.99,
-              width: MediaQuery.of(context).size.width,
-              margin: const EdgeInsets.only(top: 5.0),
-              decoration: BoxDecoration(
-                  border: Border.all(
-                      color: (!(_heading.toInt() <= 100 || _heading.toInt() >= 150)) ? Colors.green : Colors.red,
-                      width: 15.0)),
-              child: const CameraPage(),
-            ),
-            Container(
-              height: MediaQuery.of(context).size.height*0.93,
-              width: MediaQuery.of(context).size.width*0.5,
-              alignment: Alignment.center,
-              margin: const EdgeInsets.all(20.0),
-              color: Colors.transparent,
-              child: Center(
-                child: Compass(),
-              ),
-            ),
+                height: MediaQuery.of(context).size.height * 0.99,
+                width: MediaQuery.of(context).size.width,
+                margin: const EdgeInsets.only(top: 5.0),
+                decoration: BoxDecoration(
+                    border: Border.all(
+                        color: (!(_heading.toInt() <= 100 || _heading.toInt() >= 150)) ? Colors.green : Colors.red,
+                        width: 15.0)),
+                child: const CameraPage()),
+
+            /// COMPASS
+            // Container(
+            //     height: MediaQuery.of(context).size.height * 0.65,
+            //     width: MediaQuery.of(context).size.width,
+            //     child: Compass()),
+
+            /// BACK BUTTON
             InkWell(
               onTap: () => Navigator.pop(context),
               child: Container(
-                height: 40,
+                  height: 40,
                   width: 100,
                   color: Colors.black,
                   alignment: Alignment.center,
-                  child:  const Text("< Back")
-              ),
+                  child: const Text("< Back")),
             ),
           ]),
         ));
