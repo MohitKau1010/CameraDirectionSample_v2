@@ -29,7 +29,6 @@ class _CircularMapState extends State<CircularMap> {
 
   @override
   void didChangeDependencies() {
-
     super.didChangeDependencies();
   }
 
@@ -43,10 +42,10 @@ class _CircularMapState extends State<CircularMap> {
     accelerometerEvents.listen((event) {
       // Calculate the tilt angle based on accelerometer data.
       double angle = atan(event.x / sqrt(event.y * event.y + event.z * event.z));
-      setState(() {
+      // setState(() {
         // Convert radians to degrees
         _tilt = angle * (180 / pi);
-      });
+      // });
     });
   }
 
@@ -96,8 +95,8 @@ class _CircularMapState extends State<CircularMap> {
               CameraPosition(
                 target: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
                 zoom: 17.5,
-                bearing: (MediaQuery.of(context).orientation==Orientation.portrait) ? 0.0 : _heading, // Reset to north
-                tilt: (MediaQuery.of(context).orientation==Orientation.portrait) ? 0.0 : _tilt,
+                bearing: _heading, // Reset to north
+                tilt: _tilt,
               ),
             ),
           );

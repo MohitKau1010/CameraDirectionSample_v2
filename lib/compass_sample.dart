@@ -39,7 +39,7 @@ class _CompassState extends State<Compass> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     return Scaffold(
-        backgroundColor: Colors.yellow,
+        backgroundColor: Colors.transparent,
         body: OrientationBuilder(builder: (_, orientation) {
           if (orientation == Orientation.portrait) {
             return CustomPaint(
@@ -80,13 +80,13 @@ class CompassPainter extends CustomPainter {
     if (isPortrait) {
       /// Android Portrait
       radius = min(size.height / 3, size.width / 3);
-      center = Offset(size.height / 4.7, size.width / 2.7);
-      start = Offset.lerp(Offset(center.dx, radius), center, 9);
+      center = Offset(size.height / 2.5, size.width / 2.3);
+      start = Offset.lerp(Offset(center.dx, radius), center, 3);
       end = Offset.lerp(Offset(center.dx, radius), center, 1);
     } else {
       /// Android Landscape
-      radius = min(size.height / 3, size.width / 4.0);
-      center = Offset(size.height / 2, size.width / 4.5);
+      radius = min(size.height / 3, size.width / 3);
+      center = Offset(size.height / 2, size.width / 2.3);
       start = Offset.lerp(Offset(center.dx, radius), center, 3);
       end = Offset.lerp(Offset(center.dx, radius), center, 1);
     }

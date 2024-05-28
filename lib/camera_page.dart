@@ -140,15 +140,18 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         // decode image and return new image
         img.Image? originalImage = img.decodeImage(File(xFile.path).readAsBytesSync());
 
+
+        img.Image fixedImage = originalImage!; //img.flipHorizontal(originalImage!);
+
         // watermark text
         String waterMarkText = "LatLng(30.6924784,76.8775464)";
         // add watermark to image and specify the position
-        img.drawString(originalImage!, img.arial_14, 5, (originalImage.height - 100), waterMarkText, color: 0xffFF0000);
+        img.drawString(fixedImage!, img.arial_14, 5, (fixedImage.height - 100), waterMarkText, color: 0xffFF0000);
 
         // watermark text
         String waterMarkText2 = "Captured Angle (10 degree)";
         // add watermark to image and specify the position
-        img.drawString(originalImage, img.arial_14, 205, (originalImage.height - 100), waterMarkText2,
+        img.drawString(fixedImage, img.arial_14, 205, (fixedImage.height - 100), waterMarkText2,
             color: 0xffFF0000);
 
         // create temporary directory on storage
@@ -159,7 +162,11 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         String randomFileName = _random.nextInt(10000).toString();
 
         // store new image on filename
-        File('${tempDir.path}/$randomFileName.png').writeAsBytesSync(img.encodePng(originalImage));
+        File('${tempDir.path}/$randomFileName.png').writeAsBytesSync(
+            // img.encodePng(originalImage),
+          img.encodeJpg(fixedImage),
+          flush: true,
+        );
 
         // set watermarked image from image path
         File watermarkedImage = File('${tempDir.path}/$randomFileName.png');
@@ -169,7 +176,8 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         await screenshotController.capture(delay: const Duration(milliseconds: 10)).then((capturedImage) async {
           mapImage = capturedImage;
           // ShowCapturedWidget(context, capturedImage!);
-          print(" << SCREENSHOT CAPTURED >> ");
+          print(" << WATER_MARKED CAPTURED >> path : $watermarkedImage");
+          print(" << SCREENSHOT CAPTURED >> path : $mapImage");
         }).catchError((onError) {
           print(onError);
         });
@@ -193,7 +201,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
       return SafeArea(
           child: Scaffold(
               body: Stack(children: [
-                OrientationBuilder(builder: (_, orientation) {
+        OrientationBuilder(builder: (_, orientation) {
           if (orientation == Orientation.portrait) {
             // Portrait MODE
             return Column(
@@ -217,7 +225,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                           child: Container(
                               height: MediaQuery.of(context).size.height * 0.23,
                               width: MediaQuery.of(context).size.width * 0.45,
-                              color: Colors.green,
+                              color: Colors.white,
                               child: const CircularMap())),
                       SizedBox(width: MediaQuery.of(context).size.width * 0.01),
                       Column(
@@ -255,11 +263,13 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                                   height: MediaQuery.of(context).size.height * 0.16,
                                   child: ElevatedButton(
                                       onPressed: () async {
-                                        XFile? file = await captureVideo();
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: (context) => VideoPlayerScreen(videoFile: file!)));
+                                        if (!_isRecording) {
+                                          XFile? file = await captureVideo();
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => VideoPlayerScreen(videoFile: file!)));
+                                        }
                                       },
                                       style: ElevatedButton.styleFrom(
                                           padding: EdgeInsets.zero,
@@ -293,6 +303,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                 children: [
                   SizedBox(
                       width: MediaQuery.of(context).size.width * 0.7,
+                      height: MediaQuery.of(context).size.width * 0.5,
                       child: /*Container(color: Colors.lightBlueAccent) */ CameraPreview(_controller!)),
                   const SizedBox(width: 5),
                   Column(
@@ -306,7 +317,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                             child: Container(
                                 height: MediaQuery.of(context).size.height * 0.55,
                                 width: MediaQuery.of(context).size.width * 0.25,
-                                color: Colors.green,
+                                color: Colors.white,
                                 child: const CircularMap())),
                         SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                         SizedBox(
@@ -314,7 +325,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                           width: MediaQuery.of(context).size.width * 0.25,
                           child: Column(
                             children: [
-                              // give the tab bar a height [can change height to preferred height]
+                              // Give the tab bar a height [can change height to preferred height]
                               Container(
                                   height: MediaQuery.of(context).size.height * 0.09,
                                   width: MediaQuery.of(context).size.width * 0.20,
@@ -344,11 +355,13 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                                     height: MediaQuery.of(context).size.height * 0.2,
                                     child: ElevatedButton(
                                         onPressed: () async {
-                                          XFile? file = await captureVideo();
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) => VideoPlayerScreen(videoFile: file!)));
+                                          if (!_isRecording) {
+                                            XFile? file = await captureVideo();
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) => VideoPlayerScreen(videoFile: file!)));
+                                          }
                                         },
                                         style: ElevatedButton.styleFrom(
                                             padding: EdgeInsets.zero,
@@ -376,7 +389,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
                 ]);
           }
         }),
-                // Compass(),
+        // Compass(),
       ])));
     } else {
       return Container(color: Colors.black);

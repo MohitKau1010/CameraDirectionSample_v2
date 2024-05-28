@@ -24,6 +24,7 @@ class CameraWithCompass extends StatefulWidget {
 
 class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindingObserver {
   double _heading = 0;
+  late bool isPortrait;
 
   @override
   void initState() {
@@ -33,15 +34,21 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
     FlutterCompass.events?.listen(_onData);
   }
 
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   void _onData(CompassEvent x) => setState(() {
         _heading = x.heading!;
       });
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
-    var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-    // // Lock the orientation to portrait mode
+    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+    isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    // Lock the orientation to portrait mode...
     // SystemChrome.setPreferredOrientations([
     //   DeviceOrientation.landscapeLeft,
     //   DeviceOrientation.landscapeRight,
@@ -65,10 +72,10 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
                 child: const CameraPage()),
 
             /// COMPASS
-            // Container(
-            //     height: MediaQuery.of(context).size.height * 0.65,
-            //     width: MediaQuery.of(context).size.width,
-            //     child: Compass()),
+            SizedBox(
+                height: (isPortrait) ? MediaQuery.of(context).size.height * 0.55 : MediaQuery.of(context).size.height,
+                width: (isPortrait) ? MediaQuery.of(context).size.width : MediaQuery.of(context).size.width*0.5,
+                child: Compass()),
 
             /// BACK BUTTON
             InkWell(
