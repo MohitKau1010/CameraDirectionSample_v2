@@ -11,6 +11,14 @@ import 'package:camera/camera.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as img;
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
+// import 'package:location/location.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'camera_page.dart';
 import 'compass_sample.dart';
 import 'main.dart';
@@ -49,10 +57,12 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
     // SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
     isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     // Lock the orientation to portrait mode...
-    // SystemChrome.setPreferredOrientations([
-    //   DeviceOrientation.landscapeLeft,
-    //   DeviceOrientation.landscapeRight,
-    // ]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown
+    ]);
     return MaterialApp(
         // title: 'Flutter Camera App',
         themeMode: ThemeMode.dark,
@@ -61,6 +71,7 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
         // home : MapScreen(), // MapSample(),
         home: Scaffold(
           body: Stack(children: [
+
             Container(
                 height: MediaQuery.of(context).size.height * 0.99,
                 width: MediaQuery.of(context).size.width,
@@ -73,19 +84,22 @@ class _CameraWithCompassState extends State<CameraWithCompass> with WidgetsBindi
 
             /// COMPASS
             SizedBox(
-                height: (isPortrait) ? MediaQuery.of(context).size.height * 0.55 : MediaQuery.of(context).size.height,
-                width: (isPortrait) ? MediaQuery.of(context).size.width : MediaQuery.of(context).size.width*0.5,
+                height: (MediaQuery.of(context).orientation == Orientation.portrait) ? MediaQuery.of(context).size.height * 0.55 : MediaQuery.of(context).size.height,
+                width: (MediaQuery.of(context).orientation == Orientation.portrait) ? MediaQuery.of(context).size.width : MediaQuery.of(context).size.width*0.5,
                 child: Compass()),
 
             /// BACK BUTTON
-            InkWell(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                  height: 40,
-                  width: 100,
-                  color: Colors.black,
-                  alignment: Alignment.center,
-                  child: const Text("< Back")),
+            Container(
+              margin: const EdgeInsets.all(30.0),
+              child: InkWell(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                    height: 40,
+                    width: 100,
+                    color: Colors.black,
+                    alignment: Alignment.center,
+                    child: const Text("< Back")),
+              ),
             ),
           ]),
         ));

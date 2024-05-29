@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
@@ -7,9 +9,13 @@ import 'package:location/location.dart';
 // import 'package:location/location.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import 'image_watermark/show_watermark.dart';
+
 
 class CircularMap extends StatefulWidget {
-  const CircularMap({super.key});
+  GoogleMapController? mapController;
+
+  CircularMap(this.mapController, {super.key});
 
   @override
   State<CircularMap> createState() => _CircularMapState();
@@ -17,7 +23,7 @@ class CircularMap extends StatefulWidget {
 
 class _CircularMapState extends State<CircularMap> {
 
-  GoogleMapController? mapController;
+
   late LocationData? currentLocation = null;
   double compassHeading = 0.0;
   double _tilt = 0.0;
@@ -89,8 +95,8 @@ class _CircularMapState extends State<CircularMap> {
       setState(() {
         _heading = x.heading!;
         // Reset camera heading to north when FAB is pressed
-        if(mapController!=null){
-          mapController!.animateCamera(
+        if(widget.mapController!=null){
+          widget.mapController!.animateCamera(
             CameraUpdate.newCameraPosition(
               CameraPosition(
                 target: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
@@ -106,6 +112,7 @@ class _CircularMapState extends State<CircularMap> {
     });
 
   }
+
   // Function to get the current device location
   _getLocation() async {
     var location = Location();
@@ -142,9 +149,9 @@ class _CircularMapState extends State<CircularMap> {
   // Function to get the current device compass heading
   _getCompassHeading() {
     FlutterCompass.events?.listen((event) {
-      setState(() {
+      // setState(() {
         compassHeading = event.heading!;
-      });
+      // });
     });
   }
 
@@ -158,7 +165,7 @@ class _CircularMapState extends State<CircularMap> {
           initialCameraPosition: CameraPosition(
             target: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
             // Default center (e.g., San Francisco)
-            zoom: 17.5,// Reset to north
+            zoom: 17.5, // Reset to north
           ),
           compassEnabled: true, // Disable default compass
           myLocationButtonEnabled: false,
@@ -169,7 +176,8 @@ class _CircularMapState extends State<CircularMap> {
           rotateGesturesEnabled: false, // Disable manual rotation gestures
           tiltGesturesEnabled: false, // Disable manual tilt gestures
           onMapCreated: (GoogleMapController controller) {
-            mapController = controller;
+            widget.mapController = controller;
+
             setState(() {});
 
             setState(() {
@@ -193,7 +201,6 @@ class _CircularMapState extends State<CircularMap> {
           /// myLocationEnabled: true,
           markers: _markers, // Set the markers to be displayed on the map
           polygons: _polygons,
-
         ),
     );
   }

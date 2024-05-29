@@ -93,16 +93,16 @@ class _MapScreenState extends State<MapScreen> {
     });
 
     BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(0, 0)),
+      const ImageConfiguration(size: Size(2, 2)),
       'assets/img/dot_dot.png',
     ).then((BitmapDescriptor icon) {
       // Create a marker
       Marker marker = Marker(
-        markerId: const MarkerId('custom_marker'),
+        markerId: const MarkerId('custom_marker2'),
         position: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
-        // icon: icon,
+        icon: icon,
         // anchor: const Offset(0.1, 0.1),
-        // rotation: _heading, // Set rotation angle for the marker icon
+        // rotation: _heading, // Set rotation angle for the marker icon..
       );
 
       if (_heading != 0.0) {
@@ -206,10 +206,12 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     // Lock the orientation to portrait mode
-    // SystemChrome.setPreferredOrientations([
-    //   DeviceOrientation.landscapeLeft,
-    //   DeviceOrientation.landscapeRight,
-    // ]);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp], );
 
     return Scaffold(
@@ -268,6 +270,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           if (_currentLocation != null)
+
             /// LOCATION BUTTON
             Positioned(
               bottom: 16.0,
@@ -295,9 +298,10 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          if (_currentLocation != null /*&& isPointInPolygon == false*/)
-          /// LOCATION BUTTON
-            Positioned(
+          // if (_currentLocation != null /*&& isPointInPolygon == false*/)
+
+            /// LOCATION BUTTON
+            /*Positioned(
               bottom: 16.0,
               right: 16.0,
               child: Transform.rotate(
@@ -308,7 +312,7 @@ class _MapScreenState extends State<MapScreen> {
                   child: const Icon(Icons.navigation),
                 ),
               ),
-            ),
+            ),*/
 
           /// CAMERA BUTTON
           Positioned(
@@ -324,10 +328,7 @@ class _MapScreenState extends State<MapScreen> {
                 //   ),
                 // ));
                 // Navigate to the second screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CameraWithCompass()),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const CameraWithCompass()));
               },
               child: const Icon(Icons.camera_alt),
             ),

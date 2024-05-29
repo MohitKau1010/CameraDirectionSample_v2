@@ -6,14 +6,20 @@ import 'package:image_picker/image_picker.dart';
 import 'map_sample.dart';
 
 // void main() => runApp(CompassDemo());
-void main() => runApp(const MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp,DeviceOrientation.portraitDown,DeviceOrientation.landscapeLeft,DeviceOrientation.landscapeRight])
+      .then((_) {
+    runApp(const MyApp());
+  });
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Lock the orientation to portrait mode
+    /// Lock the orientation to portrait mode
     // SystemChrome.setPreferredOrientations([
     //   DeviceOrientation.portraitDown,
     //   DeviceOrientation.portraitUp,
