@@ -45,6 +45,7 @@ dependencies:
   location: ^6.0.1
 #  trust_location: ^2.0.13
   flutter_polyline_points: ^1.0.0
+  geolocator: ^10.1.0
   point_in_polygon: ^1.0.0
   http: ^0.13.3
 

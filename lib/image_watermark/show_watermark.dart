@@ -39,7 +39,7 @@ class _ImageScreenState extends State<ImageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+    // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     return Scaffold(
         appBar: AppBar(title: const Text('View Image'), actions: <Widget>[
           InkWell(
@@ -58,7 +58,7 @@ class _ImageScreenState extends State<ImageScreen> {
               visible: widget.imagePath!=null,
               child: Container(
                 height: MediaQuery.of(context).size.height * 0.75,
-                width: MediaQuery.of(context).size.width,
+                width: MediaQuery.of(context).size.height * 0.75,
                 child: InteractiveViewer(
                     panEnabled: true,
                     minScale: 0.5,
@@ -79,7 +79,7 @@ class _ImageScreenState extends State<ImageScreen> {
                 alignment: Alignment.centerRight,
                 child: InkWell(
                     onTap: _rotateImage,
-                    child: Container(
+                    child: SizedBox(
                       height: MediaQuery.of(context).size.height * 0.15,
                       child: InteractiveViewer(
                           panEnabled: true,

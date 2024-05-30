@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:compass/test_add_polygons.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:compass/camera_with_compass.dart';
@@ -7,6 +8,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:location/location.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:point_in_polygon/point_in_polygon.dart';
 
 // void main() {
@@ -32,12 +34,23 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+
   late GoogleMapController? mapController = null;
   late LocationData? _currentLocation = null;
   double compassHeading = 0.0;
   double _tilt = 0.0;
+  final _formKey = GlobalKey<FormState>();
+  double distanceInMeters = 0.0;
+  bool showPopUi = false;
+  bool reached = false;
   final Set<Marker> _markers = {}; // Define a set to hold the markers..
   final Set<Polygon> _polygons = {};
+  final List<LatLng> _polygonsPoints = const [
+    LatLng(30.693700, 76.880371), // 30.693700, 76.880371 corner
+    LatLng(30.693683, 76.880015), // 30.693683, 76.880015 gate 1
+    LatLng(30.692840, 76.879868), // 30.692840, 76.879868 transformer
+    LatLng(30.692838, 76.880331), // 30.692838, 76.880331 gate 2
+  ];
   double _heading = 0;
   bool isStopped = false;
   bool captureImage = false;
@@ -62,6 +75,16 @@ class _MapScreenState extends State<MapScreen> {
         // Convert radians to degrees
         _tilt = angle * (180 / pi);
       });
+      setState(() {
+        distanceInMeters = geo.Geolocator.distanceBetween(
+            _currentLocation!.latitude ?? 0.0, _currentLocation!.longitude ?? 0.0, 30.693683, 76.880015);
+        print(">>> distanceInMeters >> ${distanceInMeters.toInt()}");
+        if (distanceInMeters.toInt() <= 5) {
+          setState(() {
+            showPopUi = (reached == false) ? true : false;
+          });
+        }
+      });
     });
   }
 
@@ -78,10 +101,12 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _onData(CompassEvent x) {
-    setState(() {});
+    setState(() {
+      // double distanceInMeters = await geo.Geolocator().distanceBetween(lat1, lng1, lat2, lng2);
+    });
 
     setState(() {
-      _markers.removeWhere((marker) => marker.markerId == 'custom_marker');
+      _markers.removeWhere((marker) => marker.markerId == 'custom_marker2');
     });
 
     setState(() {
@@ -101,8 +126,8 @@ class _MapScreenState extends State<MapScreen> {
         markerId: const MarkerId('custom_marker2'),
         position: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
         icon: icon,
-        // anchor: const Offset(0.1, 0.1),
-        // rotation: _heading, // Set rotation angle for the marker icon..
+        anchor: const Offset(0.1, 0.1),
+        rotation: _heading/180, // Set rotation angle for the marker icon
       );
 
       if (_heading != 0.0) {
@@ -213,11 +238,15 @@ class _MapScreenState extends State<MapScreen> {
       DeviceOrientation.portraitDown,
     ]);
     // SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp], );
-
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Capture between 100 - 150'),
-      // ),
+      appBar: AppBar(
+        title: InkWell(
+            onTap: () {
+              showPopUi = true;
+              setState(() {});
+            },
+            child: Text('${distanceInMeters.toInt()} meters away')),
+      ),
       backgroundColor: Colors.white,
       body: Stack(
         children: [
@@ -247,12 +276,7 @@ class _MapScreenState extends State<MapScreen> {
                   _polygons.add(
                     Polygon(
                       polygonId: const PolygonId("polygon_1"),
-                      points: const [
-                        LatLng(30.693700, 76.880371), //30.693700, 76.880371 corner
-                        LatLng(30.693683, 76.880015), //30.693683, 76.880015 gate 1
-                        LatLng(30.692840, 76.879868), //30.692840, 76.879868 transformer
-                        LatLng(30.692838, 76.880331), //30.692838, 76.880331 gate 2
-                      ],
+                      points: _polygonsPoints,
                       strokeWidth: 5,
                       strokeColor: Colors.green,
                       fillColor: Colors.green.withOpacity(0.5),
@@ -269,9 +293,10 @@ class _MapScreenState extends State<MapScreen> {
               polygons: _polygons,
             ),
           ),
+
           if (_currentLocation != null)
 
-            /// LOCATION BUTTON
+            /// CURRENT LOCATION BUTTON
             Positioned(
               bottom: 16.0,
               left: 16.0,
@@ -288,7 +313,7 @@ class _MapScreenState extends State<MapScreen> {
                     CameraUpdate.newCameraPosition(
                       CameraPosition(
                         target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
-                        zoom: 15.0,
+                        zoom: 19.0,
                         bearing: _heading, // Reset to north
                       ),
                     ),
@@ -298,10 +323,28 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
-          // if (_currentLocation != null /*&& isPointInPolygon == false*/)
+          Positioned(
+            bottom: 16.0,
+            right: 16.0,
+            child: FloatingActionButton(
+              heroTag: "btn1",
+              onPressed: () async {
+                // Navigate to the second screen..
+                var result = await Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => DrawPolygon(_currentLocation, _polygonsPoints)));
+                if (result != null) {
+                  _polygonsPoints.clear();
+                  _polygonsPoints.addAll(result);
+                }
+                // Scaffold.of(context).showSnackBar(SnackBar(content: Text("$result"),duration: const Duration(seconds: 3),));
+              },
+              child: const Icon(Icons.add),
+            ),
+          ),
 
-            /// LOCATION BUTTON
-            /*Positioned(
+          // if (_currentLocation != null /*&& isPointInPolygon == false*/)
+          /// LOCATION BUTTON
+          /*Positioned(
               bottom: 16.0,
               right: 16.0,
               child: Transform.rotate(
@@ -333,6 +376,8 @@ class _MapScreenState extends State<MapScreen> {
               child: const Icon(Icons.camera_alt),
             ),
           ),
+
+          if (showPopUi == true) popupUI(context),
         ],
       ),
     );
@@ -355,5 +400,37 @@ class _MapScreenState extends State<MapScreen> {
         _markers.add(marker); // Add the marker to the set
       });
     });
+  }
+
+  popupUI(BuildContext context) {
+    // setState(() {
+    //   reached = false;
+    // });
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        InkWell(
+          onTap: () {
+            setState(() {
+              showPopUi = false;
+              reached = true;
+            });
+            setState(() {});
+          },
+          child: Container(
+              height: MediaQuery.of(context).size.height * 0.05,
+              width: MediaQuery.of(context).size.width * 0.9,
+              margin: const EdgeInsets.only(top: 20.0),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey, width: 2.0),
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  color: Colors.yellow),
+              child: Center(
+                  child: Text((distanceInMeters.toInt() <= 5) ? "You Reached at location." : "You Reached Near the Target",
+                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800)))),
+        ),
+      ],
+    );
   }
 }

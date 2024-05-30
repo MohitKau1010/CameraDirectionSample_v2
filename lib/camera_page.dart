@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui';
 import 'package:compass/video_player_screen.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart';
@@ -30,16 +32,18 @@ class CameraPage extends StatefulWidget {
 class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   CameraController? _controller;
   late TabController _tabController;
-  GoogleMapController? mapController;
 
   // for
   bool _isCameraInitialized = false;
   late final List<CameraDescription> _cameras;
   bool _isRecording = false;
+  static const platform = const MethodChannel('com.example/screenshot');
 
   // For getting head direction.
   double _heading = 0;
   int _activeTabIndex = 0;
+
+  final GlobalKey _globalKey = GlobalKey();
 
   // Create an instance of ScreenshotController
   ScreenshotController screenshotController = ScreenshotController();
@@ -136,12 +140,41 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
   }
 
   void onTakePhotoPressed() async {
+    Uint8List? iOSImage;
     print("<<<< PRESSED >>>");
     // final navigator = Navigator.of(context);
     final xFile = await capturePhoto();
     if (xFile != null) {
       if (xFile.path.isNotEmpty) {
-        //
+
+
+        if (Platform.isIOS){
+          /// iOS native capture screenshot todo Working but capturing full screen in iOS..
+          RenderBox renderBox = _globalKey.currentContext?.findRenderObject() as RenderBox;
+          var mapPosition = renderBox.localToGlobal(Offset.zero);
+          var mapSize = renderBox.size;
+          try {
+            iOSImage = await platform.invokeMethod('captureScreenshot', {
+              'x': mapPosition.dx,
+              'y': mapPosition.dy,
+              'width': mapSize.width,
+              'height': mapSize.height,
+            });
+            // Save or do something with the captured screenshot
+            print("<<>> // Save or do something with the captured screenshot");
+          } on PlatformException catch (e) {
+            print("Failed to capture screenshot: '${e.message}'.");
+          }
+        }else if (Platform.isAndroid){
+          /// Flutter capture screenshot todo Not Working for google map captuing view in IOS
+          RenderRepaintBoundary? boundary = _globalKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
+          var image = await boundary.toImage(pixelRatio: 3.0);
+          ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+          iOSImage = byteData?.buffer.asUint8List();
+          //Save or do something with the captured screenshot
+        }
+
+
         /// Add watermark text...
         // get the image file
         // File assetFile = await getFileFromAsset();
@@ -154,7 +187,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         // watermark text
         String waterMarkText = "LatLng(30.6924784,76.8775464)";
         // add watermark to image and specify the position
-        img.drawString(fixedImage!, img.arial_14, 5, (fixedImage.height - 100), waterMarkText, color: 0xffFF0000);
+        img.drawString(fixedImage, img.arial_14, 5, (fixedImage.height - 100), waterMarkText, color: 0xffFF0000);
 
         // watermark text
         String waterMarkText2 = "Captured Angle (10 degree)";
@@ -197,7 +230,6 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         // }
 
         await screenshotController.capture(delay: const Duration(milliseconds: 10)).then((capturedImage) async {
-
           // Uint8List test = await mapController?.takeSnapshot() as Uint8List;
           // print(" << takeSnapshot >> path : $test");
 
@@ -210,7 +242,7 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
         });
 
         // Navigate to Screen 2..
-        Navigator.push(context, MaterialPageRoute(builder: (context) => ImageScreen(watermarkedImage, mapImage!)));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => ImageScreen(watermarkedImage, iOSImage!)));
       }
     }
   }
@@ -314,13 +346,12 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
             children: [
               // const SizedBox(width: 15),
               /// Map View
-              Screenshot(
-                  controller: screenshotController,
+              RepaintBoundary(
+                  key: _globalKey,
                   child: Container(
                       height: MediaQuery.of(context).size.height * 0.23,
                       width: MediaQuery.of(context).size.width * 0.45,
-                      color: Colors.white,
-                      child: CircularMap(mapController))),
+                      child: CircularMap())),
               SizedBox(width: MediaQuery.of(context).size.width * 0.01),
               Column(
                 mainAxisSize: MainAxisSize.max,
@@ -405,13 +436,16 @@ class CameraPageState extends State<CameraPage> with WidgetsBindingObserver, Sin
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // const SizedBox(width: 15),
-                Screenshot(
-                    controller: screenshotController,
+                RepaintBoundary(
+                    key: _globalKey,
                     child: Container(
                         height: MediaQuery.of(context).size.height * 0.55,
                         width: MediaQuery.of(context).size.width * 0.25,
-                        color: Colors.white,
-                        child: CircularMap(mapController))),
+                        child: CircularMap())),
+                // Container(
+                //     height: MediaQuery.of(context).size.height * 0.55,
+                //     width: MediaQuery.of(context).size.width * 0.25,
+                //     child: CircularMap()),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.31,
