@@ -27,6 +27,7 @@ class _CircularMapState extends State<CircularMap> {
   final Set<Polygon> _polygons = {};
   double _heading = 0;
   bool captureImage = false;
+  bool isPortrait = false;
 
   @override
   void didChangeDependencies() {
@@ -41,12 +42,29 @@ class _CircularMapState extends State<CircularMap> {
     FlutterCompass.events?.listen(_onData);
     // Listen to accelerometer events.
     accelerometerEvents.listen((event) {
-      // Calculate the tilt angle based on accelerometer data.
-      double angle = atan(event.x / sqrt(event.y * event.y + event.z * event.z));
-      setState(() {
-        // Convert radians to degrees
-        _tilt = angle * (180 / pi);
-      });
+
+
+
+      if (this.mounted) {
+        double angle = atan(event.x / sqrt(event.y * event.y + event.z * event.z));
+        if(currentLocation!=null){
+          // // Calculate the tilt angle based on accelerometer data.
+          // if (MediaQuery.of(context).orientation == Orientation.portrait) {
+          //   // Portrait mode
+          //   angle = atan2(event.y, event.z);
+          // } else {
+          //   // Landscape mode
+          //   angle = atan2(event.x, event.z);
+          // }
+          setState(() {
+            // Convert radians to degrees
+            _tilt = angle * (180 / pi);
+          });
+        }
+
+
+      }
+
     });
 
   }
@@ -71,9 +89,9 @@ class _CircularMapState extends State<CircularMap> {
       Marker marker = Marker(
         markerId: const MarkerId('custom_marker2'),
         position: LatLng(currentLocation?.latitude ?? 0.0, currentLocation?.longitude ?? 0.0),
-        // icon: icon,
-        // anchor: const Offset(0.2, 0.2),
-        rotation: _heading, // Set rotation angle for the marker icon
+        icon: icon,
+        anchor: const Offset(0.5, 0.5),
+        rotation: _heading/180, // Set rotation angle for the marker icon
       );
 
       if (_heading != 0.0) {
@@ -166,10 +184,10 @@ class _CircularMapState extends State<CircularMap> {
         myLocationEnabled: false,
         mapToolbarEnabled: false,
         liteModeEnabled: false,
-        zoomControlsEnabled: false,
-        rotateGesturesEnabled: false,
+        zoomControlsEnabled: true,
+        rotateGesturesEnabled: true,
         // Disable manual rotation gestures
-        tiltGesturesEnabled: false,
+        tiltGesturesEnabled: true,
         // Disable manual tilt gestures
         onMapCreated: (GoogleMapController controller) {
           mapController = controller;

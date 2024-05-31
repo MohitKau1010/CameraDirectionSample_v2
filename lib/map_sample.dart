@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:compass/test_add_polygons.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -41,16 +42,28 @@ class _MapScreenState extends State<MapScreen> {
   double _tilt = 0.0;
   final _formKey = GlobalKey<FormState>();
   double distanceInMeters = 0.0;
+  String displayText = "";
   bool showPopUi = false;
   bool reached = false;
   final Set<Marker> _markers = {}; // Define a set to hold the markers..
   final Set<Polygon> _polygons = {};
+
+  // for getting inside polygon or not
+  late Point currentPoint;
   final List<LatLng> _polygonsPoints = const [
     LatLng(30.693700, 76.880371), // 30.693700, 76.880371 corner
     LatLng(30.693683, 76.880015), // 30.693683, 76.880015 gate 1
     LatLng(30.692840, 76.879868), // 30.692840, 76.879868 transformer
     LatLng(30.692838, 76.880331), // 30.692838, 76.880331 gate 2
   ];
+
+  final List<Point> points = <Point>[
+    Point(y: 30.693700, x: 76.880371),
+    Point(y: 30.693683, x: 76.880015),
+    Point(y: 30.692840, x: 76.879868),
+    Point(y: 30.692838, x: 76.879868),
+  ];
+
   double _heading = 0;
   bool isStopped = false;
   bool captureImage = false;
@@ -63,7 +76,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-
+    if (Platform.isIOS) {
+      location_permission();
+    }
     getLocation();
     _getCompassHeading();
     FlutterCompass.events?.listen(_onData);
@@ -71,34 +86,53 @@ class _MapScreenState extends State<MapScreen> {
     accelerometerEvents.listen((event) {
       // Calculate the tilt angle based on accelerometer data
       double angle = atan(event.x / sqrt(event.y * event.y + event.z * event.z));
-      setState(() {
-        // Convert radians to degrees
-        _tilt = angle * (180 / pi);
-      });
-      setState(() {
-        distanceInMeters = geo.Geolocator.distanceBetween(
-            _currentLocation!.latitude ?? 0.0, _currentLocation!.longitude ?? 0.0, 30.693683, 76.880015);
-        print(">>> distanceInMeters >> ${distanceInMeters.toInt()}");
-        if (distanceInMeters.toInt() <= 5) {
-          setState(() {
-            showPopUi = (reached == false) ? true : false;
-          });
-        }
-      });
+      // if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      //   // Portrait mode
+      //   angle = atan2(event.y, event.z);
+      // } else {
+      //   // Landscape mode
+      //   angle = atan2(event.x, event.z);
+      // }
+      if (this.mounted) {
+        setState(() {
+          // Convert radians to degrees
+          _tilt = angle * (180 / pi);
+        });
+      }
+
+      if(_currentLocation!=null){
+        setState(() {
+          distanceInMeters = geo.Geolocator.distanceBetween(
+              _currentLocation!.latitude ?? 0.0, _currentLocation!.longitude ?? 0.0, 30.693683, 76.880015);
+          print(">>> distanceInMeters >> ${distanceInMeters.toInt()}");
+          if (distanceInMeters.toInt() <= 5) {
+            setState(() {
+              showPopUi = (reached == false) ? true : false;
+            });
+          }
+          currentPoint = Point(x: _currentLocation!.latitude ?? 0.0, y: _currentLocation!.longitude ?? 0.0);
+          if(Poly.isPointInPolygon(currentPoint, points)){
+            displayText = "You are in the Lot :) ";
+          }else{
+            displayText = "Outside the lot make sure. :( Please make sure your lot number."; // true
+          }
+        });
+      }
+
     });
   }
 
   // Function to check if a point is inside the polygon
-  bool isPointInPolygon(LatLng point, List<LatLng> polygon) {
-    List<List<double>> convertedPolygon = polygon.map((LatLng latLng) => [latLng.latitude, latLng.longitude]).toList();
-    return Poly.isPointInPolygon(
-        Point(y: _currentLocation?.latitude ?? 0.0, x: _currentLocation?.longitude ?? 0.0), <Point>[
-      Point(y: 30.693700, x: 76.880371), //30.693700, 76.880371 corner
-      Point(y: 30.693683, x: 76.880015), //30.693683, 76.880015 gate 1
-      Point(y: 30.692840, x: 76.879868), //30.692840, 76.879868 transformer
-      Point(y: 30.692838, x: 76.880331), //30.692838, 76.880331 gate 2
-    ]);
-  }
+  // bool isPointInPolygon(LatLng point, List<LatLng> polygon) {
+  //   List<List<double>> convertedPolygon = polygon.map((LatLng latLng) => [latLng.latitude, latLng.longitude]).toList();
+  //   return Poly.isPointInPolygon(
+  //       Point(y: _currentLocation?.latitude ?? 0.0, x: _currentLocation?.longitude ?? 0.0), <Point>[
+  //     Point(y: 30.693700, x: 76.880371), //30.693700, 76.880371 corner
+  //     Point(y: 30.693683, x: 76.880015), //30.693683, 76.880015 gate 1
+  //     Point(y: 30.692840, x: 76.879868), //30.692840, 76.879868 transformer
+  //     Point(y: 30.692838, x: 76.880331), //30.692838, 76.880331 gate 2
+  //   ]);
+  // }
 
   void _onData(CompassEvent x) {
     setState(() {
@@ -126,7 +160,7 @@ class _MapScreenState extends State<MapScreen> {
         markerId: const MarkerId('custom_marker2'),
         position: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
         icon: icon,
-        anchor: const Offset(0.1, 0.1),
+        anchor: const Offset(0.5, 0.5),
         rotation: _heading/180, // Set rotation angle for the marker icon
       );
 
@@ -144,7 +178,7 @@ class _MapScreenState extends State<MapScreen> {
       ///
       setState(() {
         _heading = x.heading!;
-        // Reset camera heading to north when FAB is pressed
+        // Reset camera heading to north when FAB is pressed..
         if (mapController != null) {
           mapController!.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
               target: LatLng(_currentLocation?.latitude ?? 0.0, _currentLocation?.longitude ?? 0.0),
@@ -156,7 +190,7 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // // Function to get the current device location
+  // // Function to get the current device location..
   // _getLocation() async {
   //   var location = Location();
   //   try {
@@ -323,6 +357,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
+          /// Draw Lot/Parcel
           Positioned(
             bottom: 16.0,
             right: 16.0,
@@ -330,11 +365,23 @@ class _MapScreenState extends State<MapScreen> {
               heroTag: "btn1",
               onPressed: () async {
                 // Navigate to the second screen..
-                var result = await Navigator.push(
+                List<LatLng>  result = await Navigator.push(
                     context, MaterialPageRoute(builder: (context) => DrawPolygon(_currentLocation, _polygonsPoints)));
-                if (result != null) {
+                if (result != null ) {
                   _polygonsPoints.clear();
                   _polygonsPoints.addAll(result);
+                  setState(() {
+                    _polygons.clear();
+                    _polygons.add(
+                      Polygon(
+                        polygonId: const PolygonId("polygon_1"),
+                        points: _polygonsPoints,
+                        strokeWidth: 5,
+                        strokeColor: Colors.green,
+                        fillColor: Colors.green.withOpacity(0.5),
+                      ),
+                    );
+                  });
                 }
                 // Scaffold.of(context).showSnackBar(SnackBar(content: Text("$result"),duration: const Duration(seconds: 3),));
               },
@@ -377,7 +424,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          if (showPopUi == true) popupUI(context),
+          /*if (showPopUi == true)*/ popupUI(context),
         ],
       ),
     );
@@ -427,10 +474,35 @@ class _MapScreenState extends State<MapScreen> {
                   borderRadius: const BorderRadius.all(Radius.circular(20)),
                   color: Colors.yellow),
               child: Center(
-                  child: Text((distanceInMeters.toInt() <= 5) ? "You Reached at location." : "You Reached Near the Target",
+                  child: Text(displayText,
                       style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800)))),
         ),
       ],
     );
   }
+
+  void location_permission() async {
+    // final PermissionStatus permission = await _getLocationPermission();
+    // if (permission == PermissionStatus.granted) {
+    //   final position = await geolocator.getCurrentPosition(
+    //       desiredAccuracy: LocationAccuracy.best);
+    //
+    //   // Use the position to do whatever...
+    // }
+  }
+
+  /*Future<PermissionStatus> _getLocationPermission() async {
+    final PermissionStatus permission = await LocationPermissions()
+        .checkPermissionStatus(level: LocationPermissionLevel.location);
+
+    if (permission != PermissionStatus.granted) {
+      final PermissionStatus permissionStatus = await LocationPermissions()
+          .requestPermissions(
+          permissionLevel: LocationPermissionLevel.location);
+
+      return permissionStatus;
+    } else {
+      return permission;
+    }
+  }*/
 }
